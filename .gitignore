@@ -1,0 +1,15 @@
+# Publish only the prototype and the case study. Specs, notes and the technical doc stay local.
+/*
+!/.gitignore
+!/README.md
+!/vercel.json
+!/prototype/
+/prototype/index.html
+!/exports/
+/exports/*
+!/exports/flow/
+!/documentation/
+/documentation/*
+!/documentation/casestudy/
+!/documentation/screens/
+.DS_Store

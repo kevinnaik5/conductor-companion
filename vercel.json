@@ -1,0 +1,6 @@
+{
+  "redirects": [
+    { "source": "/", "destination": "/prototype/flow.html", "permanent": false },
+    { "source": "/casestudy", "destination": "/documentation/casestudy/", "permanent": false }
+  ]
+}

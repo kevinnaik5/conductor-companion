@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conductor Ticketing Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Devanagari:wght@400;500;600;700&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0..1,0&display=block" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+body { padding: 32px 24px 48px; }
+.stage { display: flex; gap: 40px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+.phone { position: relative; }
+.ring { position: absolute; border-radius: 10px; pointer-events: none; z-index: 20;
+  box-shadow: 0 0 0 4px #FFC400, 0 0 0 9px rgba(255,196,0,.35); animation: pulse 1.2s ease-in-out infinite; }
+.ring.look { box-shadow: 0 0 0 4px #00B8D4, 0 0 0 9px rgba(0,184,212,.3); animation: none; }
+.finger { position: absolute; z-index: 21; pointer-events: none; font-size: 44px; color: #1A1820;
+  filter: drop-shadow(0 2px 3px rgba(255,255,255,.9)); }
+@keyframes pulse { 50% { box-shadow: 0 0 0 4px #FFC400, 0 0 0 14px rgba(255,196,0,.15); } }
+@media (prefers-reduced-motion: reduce) { .ring { animation: none; } }
+.hot { cursor: pointer; }
+/* ?shot=1: screen only, for PNG export */
+body.shot { padding: 0; background: transparent; }
+body.shot .side { display: none; }
+body.shot .stage { display: block; }
+body.shot .device { border-radius: 0; box-shadow: none; }
+
+.side { width: 420px; max-width: 100%; }
+.card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+.stepno { font-size: 14px; font-weight: 700; color: #5A5563; letter-spacing: .04em; text-transform: uppercase; }
+.card h2 { font-size: 26px; line-height: 1.2; margin: 6px 0 16px; }
+.do { display: flex; gap: 12px; align-items: center; padding: 14px 16px; border-radius: 12px; background: #FFF3C4; border: 2px solid #FFC400; font-size: 17px; font-weight: 700; }
+.do.look { background: #DDF7FB; border-color: #00B8D4; }
+.do.none { background: #EFEAF5; border-color: #C9C5CF; }
+.do .ms { font-size: 28px; }
+.why { font-size: 17px; line-height: 1.5; margin: 16px 0 0; color: #2E2A36; }
+.why b { color: #1A1820; }
+.taps { display: flex; gap: 16px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #E2DEE7; }
+.taps div { font-size: 14px; color: #5A5563; }
+.taps strong { display: block; font-size: 28px; color: #1A1820; }
+.nav { display: flex; gap: 10px; margin-top: 20px; }
+.nav button { height: 52px; border-radius: 8px; font: 700 17px 'IBM Plex Sans', 'IBM Plex Sans Devanagari'; padding: 0 22px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.nav .back { background: transparent; border: 2px solid #4A4552; color: #1A1820; }
+.nav .next { background: #2B1A66; border: 0; color: #fff; margin-left: auto; }
+.nav button:disabled { opacity: .35; cursor: default; }
+.nav button:focus-visible, .hot:focus-visible { outline: 3px solid #00B8D4; outline-offset: 3px; }
+.dots { display: flex; gap: 6px; margin-top: 16px; flex-wrap: wrap; }
+.dots i { width: 10px; height: 10px; border-radius: 5px; background: #C9C5CF; }
+.dots i.on { background: #2B1A66; width: 24px; }
+.summary { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 16px; }
+.summary td { padding: 8px 4px; border-bottom: 1px solid #E2DEE7; }
+.summary td:last-child { text-align: right; font-weight: 800; }
+.hint { font-size: 14px; color: #5A5563; margin-top: 14px; }
+.chapters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.chapters button { height: 36px; padding: 0 12px; border-radius: 18px; border: 1.5px solid #C9D3E0; background: #fff; color: #1A1820;
+  font: 600 14px 'IBM Plex Sans', 'IBM Plex Sans Devanagari'; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.chapters button .ms { font-size: 18px; }
+.chapters button[aria-current="true"] { background: #0B1F3A; color: #fff; border-color: #0B1F3A; }
+.chapters button:focus-visible { outline: 3px solid #00B8D4; outline-offset: 2px; }
+.langbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-size: 14px; font-weight: 700; color: #5A5563; }
+.langbar button { height: 36px; padding: 0 14px; border-radius: 8px; border: 2px solid #4A4552; background: #fff; font: 700 15px 'IBM Plex Sans', 'IBM Plex Sans Devanagari'; cursor: pointer; }
+.langbar button[aria-pressed="true"] { background: #111; color: #fff; border-color: #111; }
+.rules { margin: 10px 0 0; padding-left: 20px; }
+.rules li { margin-bottom: 6px; }
+.note { font-size: 15px; margin: 12px 0 0; color: #47434F; }
+.ticket { margin-top: 16px; background: #FFFEF8; border: 1px dashed #8A8494; border-radius: 4px; padding: 14px 16px; width: 260px;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 13px; color: #1A1820; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+.tk-h { text-align: center; font-weight: 700; border-bottom: 1px dashed #8A8494; padding-bottom: 8px; margin-bottom: 8px; }
+.tk-r { font-size: 15px; margin-bottom: 6px; }
+.tk-row { display: flex; justify-content: space-between; gap: 8px; }
+.tk-fare { font-size: 26px; font-weight: 800; text-align: center; margin: 6px 0; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone" id="phone"><div class="device" id="device"></div></div>
+  <div class="side"><div class="card" id="card"></div></div>
+</div>
+
+<script src="components.js"></script>
+<script>
+/* One shift moment at Pragati Maidan: card, cash, cash ×2, UPI. */
+const base = { pending: { count: 0 } };
+const S = (o = {}) => mainScreen({ ...base, ...o });
+
+// Printed ticket preview shown in the side panel
+const ticket = ({ no, from, to, pax = 'Adult × 1', fare, pay, time }) => `
+  <div class="ticket" aria-label="Printed ticket preview">
+    <div class="tk-h">DTC · Route 548 Up · Non-AC</div>
+    <div class="tk-r"><b>${from} → ${to}</b></div>
+    <div class="tk-row"><span>${pax}</span><span>${pay}</span></div>
+    <div class="tk-fare">${fare}</div>
+    <div class="tk-row"><span>Ticket #00${no}</span><span>13 Oct 2026 · ${time}</span></div>
+  </div>`;
+
+const AT_PM = 3, AT_BM = 4; // Pragati Maidan, Bhairon Marg
+const steps = [
+  {
+    title: 'This is the home screen',
+    act: ['none', 'info', 'Nothing to tap yet. The bus is at Pragati Maidan.'],
+    why: '<b>Top half is for reading</b>: route, battery, printer, and the stop the bus is at (from GPS). <b>Bottom half is for tapping</b>, from bottom to top: fare buttons, passengers (Child, ×2…), payment (Cash, Card, UPI). Defaults are Cash, adult, 1 passenger.',
+    screen: () => S({ last: { no: 42, pay: t('cash'), route: trip('Pragati Maidan', 'Ashram'), from: 'Pragati Maidan', to: 'Ashram', fare: '₹5', secs: 9 } }), served: 0,
+  },
+  {
+    title: 'Every ticket: fare first, then the stop',
+    act: ['look', 'record_voice_over', 'Passenger says where they\'re going. Conductor taps the fare, then that stop.'],
+    look: '[data-name="FareButtons"]',
+    why: 'DTC needs to know <b>where every passenger gets off</b>. The fare button opens a short list of only the stops at that price. The conductor taps the passenger\'s stop and the ticket prints.<br><br><b>No memorising prices:</b> each fare button shows the furthest stop it reaches from here: ₹5 <b>to Ashram</b>, ₹10 <b>to Jamia Nagar</b>, ₹15 <b>to Hamdard Nagar</b>. These update as the bus moves.',
+    screen: () => S({ last: { no: 42, pay: t('cash'), route: trip('Pragati Maidan', 'Ashram'), from: 'Pragati Maidan', to: 'Ashram', fare: '₹5', secs: 9 } }), served: 0,
+  },
+  {
+    title: 'Passenger 1: blue card, going to Okhla',
+    act: ['tap', 'touch_app', 'Tap Card'],
+    tap: '[data-name="Pay/Card"]',
+    why: 'A blue card holds money, so the device needs the fare and the stop before it can charge the card.',
+    screen: () => S({ last: { no: 42, pay: t('cash'), route: trip('Pragati Maidan', 'Ashram'), from: 'Pragati Maidan', to: 'Ashram', fare: '₹5', secs: 6 } }), taps: 1, served: 0,
+  },
+  {
+    title: 'Okhla costs ₹10',
+    act: ['tap', 'touch_app', 'Tap ₹10'],
+    tap: '[data-name="FareButton/Slab2"]',
+    why: 'Okhla is past Ashram (the ₹5 limit) but before Jamia Nagar, so it\'s under the button that says <b>to Jamia Nagar</b>: ₹10.',
+    screen: () => S({ mods: { pay: 'card' }, last: { no: 42, pay: t('cash'), route: trip('Pragati Maidan', 'Ashram'), from: 'Pragati Maidan', to: 'Ashram', fare: '₹5', secs: 4 } }), taps: 1, served: 0,
+  },
+  {
+    title: 'Only the ₹10 stops appear',
+    act: ['tap', 'touch_app', 'Tap Okhla'],
+    tap: '[data-name="StopButton/Okhla"]',
+    why: 'The list opens right above the fare buttons, inside thumb reach, and shows only the stops that cost ₹10 <b>from Pragati Maidan</b>. The header says which stop the list is counted from. If that\'s wrong, <b>Change start</b> at the top of the list fixes it.<br><br>Tapped the wrong fare? Tap another fare and the list switches. Tap the same fare again to close it.',
+    screen: () => S({ mods: { pay: 'card' }, row: { band: 1 }, last: { no: 42, pay: t('cash'), route: trip('Pragati Maidan', 'Ashram'), from: 'Pragati Maidan', to: 'Ashram', fare: '₹5', secs: 2 } }), taps: 1, served: 0,
+  },
+  {
+    title: 'The device asks for the card',
+    act: ['none', 'contactless', 'Passenger taps their card on the device.'],
+    look: '[data-name="CardWait"]',
+    why: 'If the passenger changes their mind, <b>Cancel</b> goes back and nothing is charged.',
+    screen: () => S({ mods: { pay: 'card' }, overlay: cardWait({ no: 43, dest: 'Okhla' }) }), served: 0,
+  },
+  {
+    title: '₹10 deducted, ticket printing',
+    act: ['none', 'check_circle', 'Nothing to tap. This closes by itself.'],
+    why: `<b>3 taps</b> for a blue card: Card, fare, stop.${ticket({ no: 43, from: 'Pragati Maidan', to: 'Okhla', fare: '₹10', pay: 'Blue card', time: '09:41' })}`,
+    screen: () => S({ overlay: cardOverlay('blue', 43, { meta: `${rt('Pragati Maidan', 'Okhla')} · ${t('balance', '₹184')}` }) }), served: 1,
+  },
+  {
+    title: 'The bus moves. GPS isn\'t sure',
+    act: ['tap', 'touch_app', 'Tap Yes (or wait 4 s and it accepts by itself)'],
+    tap: '[data-name="ActionSlot/Yes"]',
+    why: `Because the stop lists are counted from the boarding stop, a wrong stop would show the wrong list. So <b>GPS suggests and the conductor always has the final say</b>:
+      <ul class="rules">
+        <li>The boarding stop is always on screen, and every stop list repeats it ("From …").</li>
+        <li>When GPS isn't sure, it <b>asks</b> in yellow. The answer buttons (Yes / Change) appear down in the thumb zone. If nobody answers, it says yes after 4 s.</li>
+        <li>If GPS is wrong, <b>Change</b> (here, or <b>Change start</b> in every stop list) picks the right one, and the lists rebuild at once.</li>
+        <li>If GPS is lost, a big <b>Next stop</b> button lets the conductor move it along by hand.</li>
+      </ul>`,
+    screen: () => S({ at: AT_PM, gps: 'unsure', last: { no: 43, pay: t('blueCard'), route: trip('Pragati Maidan', 'Okhla'), from: 'Pragati Maidan', to: 'Okhla', fare: '₹10', secs: 10 } }), served: 1,
+  },
+  {
+    title: 'Passenger 2: cash, going to Nizamuddin',
+    act: ['tap', 'touch_app', 'Tap ₹5'],
+    tap: '[data-name="FareButton/Slab1"]',
+    why: 'The bus is now at <b>Bhairon Marg</b>. Look at the fare buttons: the labels moved on with the bus. ₹5 now reaches <b>Maharani Bagh</b> and ₹10 reaches <b>Batra Hospital</b>. Nizamuddin is well inside ₹5.',
+    screen: () => S({ at: AT_BM, last: { no: 43, pay: t('blueCard'), route: trip('Pragati Maidan', 'Okhla'), from: 'Pragati Maidan', to: 'Okhla', fare: '₹10', secs: 6 } }), taps: 1, served: 1,
+  },
+  {
+    title: 'Tap the stop, and it prints',
+    act: ['tap', 'touch_app', 'Tap Nizamuddin'],
+    tap: '[data-name="StopButton/Nizamuddin"]',
+    why: 'There is no "Confirm" button on purpose. <b>Tapping the stop is the confirmation</b>, and the ticket prints right away.',
+    screen: () => S({ at: AT_BM, row: { band: 0 }, last: { no: 43, pay: t('blueCard'), route: trip('Pragati Maidan', 'Okhla'), from: 'Pragati Maidan', to: 'Okhla', fare: '₹10', secs: 4 } }), taps: 1, served: 1,
+  },
+  {
+    title: 'Printed. Undo is the safety net',
+    act: ['look', 'visibility', 'The strip shows ticket #0044 printing.'],
+    look: '.st',
+    why: `The device vibrates and the printer sounds. Wrong fare or stop? <b>Undo</b> on this strip voids the ticket for ~15 s. <b>2 taps</b> for cash.${ticket({ no: 44, from: 'Bhairon Marg', to: 'Nizamuddin', fare: '₹5', pay: 'Cash', time: '09:43' })}`,
+    screen: () => S({ at: AT_BM, status: { printer: 'busy' }, last: { kind: 'printing', no: 44, pay: t('cash'), route: trip('Bhairon Marg', 'Nizamuddin'), from: 'Bhairon Marg', to: 'Nizamuddin', fare: '₹5' } }), served: 2,
+  },
+  {
+    title: 'Passengers 3 and 4: going to Hamdard Nagar',
+    act: ['tap', 'touch_app', 'Tap ×2'],
+    tap: '[data-name="Chip/×2"]',
+    why: 'Two people, same stop, paying together. Options go on before the fare.',
+    screen: () => S({ at: AT_BM, last: { no: 44, pay: t('cash'), route: trip('Bhairon Marg', 'Nizamuddin'), from: 'Bhairon Marg', to: 'Nizamuddin', fare: '₹5', secs: 13 } }), taps: 1, served: 2,
+  },
+  {
+    title: 'The fare shows the total for two',
+    act: ['tap', 'touch_app', 'Tap ₹30 (₹15 × 2)'],
+    tap: '[data-name="FareButton/Slab3"]',
+    why: 'With ×2 on, every fare button shows the doubled amount, so the conductor knows how much cash to take.',
+    screen: () => S({ at: AT_BM, mods: { mult: 2 }, last: { no: 44, pay: t('cash'), route: trip('Bhairon Marg', 'Nizamuddin'), from: 'Bhairon Marg', to: 'Nizamuddin', fare: '₹5', secs: 11 } }), taps: 1, served: 2,
+  },
+  {
+    title: '₹15 list: the last stop comes first',
+    act: ['tap', 'touch_app', 'Tap Hamdard Nagar'],
+    tap: '[data-name="StopButton/Hamdard Nagar"]',
+    why: 'Most long-distance riders go to the end of the route, so the <b>terminal is always first</b> in the ₹15 list. The other ₹15 stops follow in route order. On a long route this is the only list that may scroll.',
+    screen: () => S({ at: AT_BM, mods: { mult: 2 }, row: { band: 2 }, last: { no: 44, pay: t('cash'), route: trip('Bhairon Marg', 'Nizamuddin'), from: 'Bhairon Marg', to: 'Nizamuddin', fare: '₹5', secs: 9 } }), taps: 1, served: 2,
+  },
+  {
+    title: 'Passenger 5 says "Okhla, cash"',
+    act: ['tap', 'touch_app', 'Tap ₹10'],
+    tap: '[data-name="FareButton/Slab2"]',
+    why: 'Ticket #0045 is printing for the two passengers, and every option has reset to Cash, 1 passenger.',
+    screen: () => S({ at: AT_BM, status: { printer: 'busy' }, last: { kind: 'printing', no: 45, pay: `${t('cash')} × 2`, route: trip('Bhairon Marg', 'Hamdard Nagar'), from: 'Bhairon Marg', to: 'Hamdard Nagar', fare: '₹30' } }), taps: 1, served: 4,
+  },
+  {
+    title: '…then changes their mind: "I\'ll pay by UPI"',
+    act: ['tap', 'touch_app', 'Tap Cancel in the stop list'],
+    tap: '[data-name="StopRow/Cancel"]',
+    why: `<b>Nothing is charged or printed until the last tap</b>, so cancelling is always safe. Every stage has a way out:
+      <ul class="rules">
+        <li><b>Options picked, no fare yet:</b> Cancel on the "New ticket" strip.</li>
+        <li><b>Stop list open:</b> Cancel in the list, or tap the same fare again.</li>
+        <li><b>Waiting for a card:</b> Cancel.</li>
+        <li><b>QR on screen:</b> Cancel, bottom-left.</li>
+        <li><b>Already printed:</b> Undo, for about 15 s.</li>
+      </ul>`,
+    screen: () => S({ at: AT_BM, row: { band: 1 } }), taps: 1, served: 4,
+  },
+  {
+    title: 'Cancelled. Start again with UPI',
+    act: ['tap', 'touch_app', 'Tap UPI'],
+    tap: '[data-name="Pay/UPI"]',
+    why: 'Back to the home screen with the defaults. No ticket was made. Now the conductor starts the UPI ticket. As soon as an option is picked, the strip turns into a <b>New ticket</b> strip with its own Cancel button.',
+    screen: () => S({ at: AT_BM, last: { no: 45, pay: `${t('cash')} × 2`, route: trip('Bhairon Marg', 'Hamdard Nagar'), from: 'Bhairon Marg', to: 'Hamdard Nagar', fare: '₹30', secs: 8 } }), taps: 1, served: 4,
+  },
+  {
+    title: 'Okhla is ₹10 from here',
+    act: ['tap', 'touch_app', 'Tap ₹10'],
+    tap: '[data-name="FareButton/Slab2"]',
+    why: 'Every fare now shows a UPI tag, and the strip shows the ticket being built (UPI) with a Cancel button.',
+    screen: () => S({ at: AT_BM, mods: { pay: 'upi' }, last: { no: 45, pay: `${t('cash')} × 2`, route: trip('Bhairon Marg', 'Hamdard Nagar'), from: 'Bhairon Marg', to: 'Hamdard Nagar', fare: '₹30', secs: 12 } }), taps: 1, served: 4,
+  },
+  {
+    title: 'Pick the stop',
+    act: ['tap', 'touch_app', 'Tap Okhla'],
+    tap: '[data-name="StopButton/Okhla"]',
+    why: 'Same list as before, now counted from Bhairon Marg. Tapping the stop opens the QR code instead of printing.',
+    screen: () => S({ at: AT_BM, mods: { pay: 'upi' }, row: { band: 1 }, last: { no: 45, pay: `${t('cash')} × 2`, route: trip('Bhairon Marg', 'Hamdard Nagar'), from: 'Bhairon Marg', to: 'Hamdard Nagar', fare: '₹30', secs: 10 } }), taps: 1, served: 4,
+  },
+  {
+    title: 'Show the QR to the passenger',
+    act: ['tap', 'touch_app', 'Passenger scans, then tap "Scanned, next passenger"'],
+    tap: '[data-name="UPI/ScannedNext"]',
+    why: 'The conductor turns the device around and moves on as soon as the passenger has scanned. <b>No waiting</b> for the payment.<br><br>If the passenger can\'t pay, <b>Cancel</b> is bottom-left: in reach of the thumb, but smaller and separate from the main button so it isn\'t hit by accident.',
+    screen: () => upiScreen({ no: 46, route: rt('Bhairon Marg', 'Okhla') }), taps: 1, served: 4,
+  },
+  {
+    title: 'The payment waits in the UPI bar',
+    act: ['look', 'visibility', 'The UPI tile shows 1 payment pending.'],
+    look: '[data-name^="PendingWidget"]',
+    why: 'The conductor can serve the next passenger. If the payment hasn\'t arrived after 1:00, this tile turns <b>red</b> as a reminder.',
+    screen: () => S({ at: AT_BM, pending: { count: 1 }, last: { no: 45, pay: `${t('cash')} × 2`, route: trip('Bhairon Marg', 'Hamdard Nagar'), from: 'Bhairon Marg', to: 'Hamdard Nagar', fare: '₹30', secs: 6 } }), served: 4,
+  },
+  {
+    title: 'Payment arrives, ticket prints on its own',
+    act: ['none', 'check_circle', 'Nothing to tap.'],
+    look: '[data-name^="PendingWidget"]',
+    why: `The tile turns green and the ticket prints automatically. <b>4 taps</b> for UPI.${ticket({ no: 46, from: 'Bhairon Marg', to: 'Okhla', fare: '₹10', pay: 'UPI', time: '09:45' })}`,
+    screen: () => S({ at: AT_BM, status: { printer: 'busy' }, pending: { paid: true }, last: { kind: 'printing', no: 46, pay: t('upi'), route: trip('Bhairon Marg', 'Okhla'), from: 'Bhairon Marg', to: 'Okhla', fare: '₹10' } }), served: 5,
+  },
+  {
+    title: 'Passenger 6 taps a pink card first',
+    act: ['tap', 'touch_app', 'Going to Ashram (a ₹5 distance): tap ₹5'],
+    tap: '[data-name="FareButton/Slab1"]',
+    why: 'Pink cards travel free, so the passenger can tap before the conductor does anything. The device switches to <b>Pink · Free</b>. DTC still needs the stop, so the conductor uses the usual fare button to open the right list. Nothing is charged.',
+    screen: () => S({ at: AT_BM, mods: { pay: 'pink' }, alert: { tone: 'pink', icon: 'contactless', title: t('pinkRead'), text: t('pinkText') }, last: { no: 46, pay: t('upi'), route: trip('Bhairon Marg', 'Okhla'), from: 'Bhairon Marg', to: 'Okhla', fare: '₹10', secs: 12 } }), taps: 1, served: 5,
+  },
+  {
+    title: 'Pick the stop',
+    act: ['tap', 'touch_app', 'Tap Ashram'],
+    tap: '[data-name="StopButton/Ashram"]',
+    why: 'Same list as a ₹5 cash ticket, marked Free.',
+    screen: () => S({ at: AT_BM, mods: { pay: 'pink' }, row: { band: 0 }, alert: { tone: 'pink', icon: 'contactless', title: t('pinkRead'), text: t('pinkText') }, last: { no: 46, pay: t('upi'), route: trip('Bhairon Marg', 'Okhla'), from: 'Bhairon Marg', to: 'Okhla', fare: '₹10', secs: 10 } }), taps: 1, served: 5,
+  },
+  {
+    title: 'Free ticket printing',
+    act: ['none', 'check_circle', 'Nothing to tap. This closes by itself.'],
+    why: `<b>2 taps</b> for a pink card: distance, stop.${ticket({ no: 47, from: 'Bhairon Marg', to: 'Ashram', fare: '₹0 · Free', pay: 'Pink card', time: '09:46' })}`,
+    screen: () => S({ at: AT_BM, overlay: cardOverlay('pink', 47, { meta: rt('Bhairon Marg', 'Ashram') }) }), served: 6,
+  },
+  {
+    title: '6 passengers, 16 taps',
+    act: ['none', 'flag', 'Flow complete. Restart to watch again.'],
+    why: `<table class="summary">
+      <tr><td>Blue card (Card, fare, stop)</td><td>3</td></tr>
+      <tr><td>Cash (fare, stop)</td><td>2</td></tr>
+      <tr><td>Cash × 2, same stop (×2, fare, stop)</td><td>3</td></tr>
+      <tr><td>UPI (UPI, fare, stop, Scanned)</td><td>4</td></tr>
+      <tr><td>Change of mind (₹10, Cancel)</td><td>2</td></tr>
+      <tr><td>Pink card (distance, stop)</td><td>2</td></tr>
+    </table>
+    <p class="note">Brief scenario, 1 card + 2 cash adults: <b>6 taps</b> with a pink card, <b>7</b> with a blue card. That's more than the addendum's 4, because every passenger now needs a stop and blue cards need a fare.</p>`,
+    screen: () => S({ at: AT_BM, last: { no: 47, pay: t('pink'), route: trip('Bhairon Marg', 'Ashram'), from: 'Bhairon Marg', to: 'Ashram', fare: '₹0', secs: 12 } }), served: 6,
+  },
+];
+
+const device = document.getElementById('device');
+const phone = document.getElementById('phone');
+const card = document.getElementById('card');
+// Passenger chapters: jump straight to any passenger (1-based step ranges)
+const CHAPTERS = [
+  { name: 'Start', ic: 'home', from: 1, to: 2 },
+  { name: 'Blue card', ic: 'contactless', from: 3, to: 7 },
+  { name: 'GPS', ic: 'my_location', from: 8, to: 8 },
+  { name: 'Cash', ic: 'payments', from: 9, to: 11 },
+  { name: 'Cash × 2', ic: 'group', from: 12, to: 14 },
+  { name: 'Change of mind', ic: 'undo', from: 15, to: 17 },
+  { name: 'UPI', ic: 'qr_code_2', from: 18, to: 22 },
+  { name: 'Pink card', ic: 'woman', from: 23, to: 25 },
+  { name: 'Summary', ic: 'flag', from: 26, to: 26 },
+];
+const PARAMS = new URLSearchParams(location.search);
+const SHOT = PARAMS.get('shot') === '1';
+if (PARAMS.get('lang') === 'hi') LANG = 'hi';
+if (SHOT) document.body.classList.add('shot');
+let i = Math.min(steps.length - 1, Math.max(0, parseInt(new URLSearchParams(location.search).get('step'), 10) - 1 || 0));
+
+function totalTaps(upTo) { return steps.slice(0, upTo).reduce((n, s) => n + (s.taps || 0), 0); }
+
+function placeRing(sel, kind) {
+  const el = device.querySelector(sel);
+  if (!el) return null;
+  const d = device.getBoundingClientRect(), r = el.getBoundingClientRect();
+  const ring = document.createElement('div');
+  ring.className = `ring ${kind === 'look' ? 'look' : ''}`;
+  Object.assign(ring.style, { left: `${r.left - d.left}px`, top: `${r.top - d.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+  phone.appendChild(ring);
+  if (kind === 'tap') {
+    const f = document.createElement('span');
+    f.className = 'ms fill finger'; f.textContent = 'touch_app'; f.setAttribute('aria-hidden', 'true');
+    Object.assign(f.style, { left: `${r.left - d.left + r.width - 30}px`, top: `${r.top - d.top + r.height - 30}px` });
+    phone.appendChild(f);
+  }
+  return el;
+}
+
+function render() {
+  const s = steps[i];
+  phone.querySelectorAll('.ring, .finger').forEach(n => n.remove());
+  device.innerHTML = s.screen();
+
+  if (SHOT) {
+    // no highlight in export mode
+  } else if (s.tap) {
+    const el = placeRing(s.tap, 'tap');
+    if (el) { el.classList.add('hot'); el.addEventListener('click', go.bind(null, 1)); el.focus({ preventScroll: true }); }
+  } else if (s.look) {
+    placeRing(s.look, 'look');
+  }
+
+  const [kind, ic, text] = s.act;
+  card.innerHTML = `
+    <nav class="chapters" aria-label="Jump to a passenger">${CHAPTERS.map((c, k) => `<button data-ch="${k}" aria-current="${i + 1 >= c.from && i + 1 <= c.to}"><span class="ms" aria-hidden="true">${c.ic}</span>${c.name}</button>`).join('')}</nav>
+    <div class="langbar">Device language
+      <button data-lang="en" aria-pressed="${LANG === 'en'}">English</button>
+      <button data-lang="hi" aria-pressed="${LANG === 'hi'}">हिन्दी</button></div>
+    <div class="stepno">Step ${i + 1} of ${steps.length}</div>
+    <h2>${s.title}</h2>
+    <div class="do ${kind}"><span class="ms fill" aria-hidden="true">${ic}</span>${text}</div>
+    <div class="why">${s.why}</div>
+    <div class="taps"><div><strong>${totalTaps(i)}</strong>conductor taps so far</div><div><strong>${s.served}</strong>passengers served</div></div>
+    <div class="nav">
+      <button class="back" ${i === 0 ? 'disabled' : ''}><span class="ms" aria-hidden="true">arrow_back</span>Back</button>
+      <button class="next">${i === steps.length - 1 ? 'Restart' : s.tap ? 'Skip' : 'Next'}<span class="ms" aria-hidden="true">${i === steps.length - 1 ? 'replay' : 'arrow_forward'}</span></button>
+    </div>
+    <div class="dots">${steps.map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div>
+    <p class="hint">${s.tap ? 'Tap the highlighted button on the device, or use the arrow keys.' : 'Use Next or the arrow keys.'}</p>`;
+  card.querySelectorAll('[data-ch]').forEach(b => { b.onclick = () => { i = CHAPTERS[+b.dataset.ch].from - 1; render(); }; });
+  card.querySelectorAll('[data-lang]').forEach(b => { b.onclick = () => { LANG = b.dataset.lang; render(); }; });
+  const devLang = device.querySelector('[data-name="StatusBar/Language"]');
+  if (devLang && !SHOT) devLang.onclick = () => { LANG = LANG === 'en' ? 'hi' : 'en'; render(); };
+  card.querySelector('.back').onclick = () => go(-1);
+  card.querySelector('.next').onclick = () => (i === steps.length - 1 ? (i = 0, render()) : go(1));
+}
+
+
+function go(dir) { i = Math.max(0, Math.min(steps.length - 1, i + dir)); render(); }
+document.addEventListener('keydown', e => { if (e.key === 'ArrowRight') go(1); if (e.key === 'ArrowLeft') go(-1); });
+document.fonts.ready.then(render);
+render();
+</script>
+</body>
+</html>
