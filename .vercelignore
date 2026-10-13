@@ -1,0 +1,15 @@
+# Deploy only what the repo publishes: prototype + case study.
+/*
+!/vercel.json
+!/prototype/
+/prototype/index.html
+!/exports/
+/exports/*
+!/exports/flow/
+!/documentation/
+/documentation/*
+!/documentation/casestudy/
+!/documentation/screens/
+.DS_Store
+.env*
+.vercel
