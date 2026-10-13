@@ -13,3 +13,5 @@
 !/documentation/casestudy/
 !/documentation/screens/
 .DS_Store
+.vercel
+.env*

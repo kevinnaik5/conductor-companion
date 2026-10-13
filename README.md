@@ -4,6 +4,7 @@ A one-handed, glanceable ticketing flow for Delhi Transport Corporation (DTC) bu
 
 **Kevin Naik** · Masters in Interaction Design, DTU
 
+- **Live:** https://conductor-companion-one.vercel.app
 - **Prototype:** `/` opens the click-through flow (26 steps, six passengers, English and Hindi). Use the passenger tabs to jump to any scenario.
 - **Case study:** `/casestudy` opens the slide deck.
 
